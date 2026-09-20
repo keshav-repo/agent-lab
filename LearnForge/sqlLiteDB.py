@@ -1,9 +1,11 @@
 import json
 import sqlite3
+from pathlib import Path
 
 from models import LearningEntity
 
-conn = sqlite3.connect("knowledge.db")
+DB_PATH = Path(__file__).resolve().parent / "knowledge.db"
+conn = sqlite3.connect(DB_PATH)
 
 CREATE_LEARNING_ENTITIES = """
 CREATE TABLE IF NOT EXISTS learning_entities (
