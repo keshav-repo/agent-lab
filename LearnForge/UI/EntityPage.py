@@ -8,6 +8,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from sqlLiteDB import get_all_learning_entities
+from theme import ROW_EVEN, ROW_ODD, apply_theme
 
 COLUMNS = ("id", "text", "category", "subcategory", "topic", "subtopic", "concept", "tags")
 FILTER_FIELDS = ("category", "subcategory", "topic", "subtopic")
@@ -31,11 +32,10 @@ def _search_blob(entity):
     return " ".join(str(value) for value in _entity_values(entity)).lower()
 
 
-class EntityPage(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Learning Entities")
-        self.geometry("1100x560")
+class EntityPage(ttk.Frame):
+    def __init__(self, master, on_back=None):
+        super().__init__(master, padding=8)
+        self.on_back = on_back
         self.entities = []
         self.filter_vars = {}
         self.filter_boxes = {}
@@ -44,51 +44,69 @@ class EntityPage(tk.Tk):
         self.refresh()
 
     def _build(self):
-        frame = ttk.Frame(self, padding=8)
-        frame.pack(fill=tk.BOTH, expand=True)
+        frame = self
+
+        header = ttk.Frame(frame)
+        header.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 12))
+        if self.on_back:
+            ttk.Button(
+                header,
+                text="← Back",
+                style="Back.TButton",
+                command=self.on_back,
+            ).pack(side=tk.LEFT)
+        ttk.Label(header, text="Learning Entities", style="Heading.TLabel").pack(
+            side=tk.LEFT, padx=(12, 0)
+        )
+        self.count_label = ttk.Label(header, text="", style="Muted.TLabel")
+        self.count_label.pack(side=tk.RIGHT)
 
         toolbar = ttk.Frame(frame)
-        toolbar.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        toolbar.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 8))
 
-        ttk.Label(toolbar, text="Search").pack(side=tk.LEFT, padx=(0, 8))
+        ttk.Label(toolbar, text="Search", style="Muted.TLabel").pack(side=tk.LEFT, padx=(0, 8))
         self.search_var = tk.StringVar()
         search_entry = ttk.Entry(toolbar, textvariable=self.search_var)
         search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
         self.search_var.trace_add("write", lambda *_args: self.apply_filter())
 
-        ttk.Button(toolbar, text="Clear", command=self.clear_filters).pack(
+        ttk.Button(toolbar, text="Clear", style="Secondary.TButton", command=self.clear_filters).pack(
             side=tk.LEFT, padx=(8, 0)
         )
-        ttk.Button(toolbar, text="Refresh", command=self.refresh).pack(
+        ttk.Button(toolbar, text="Refresh", style="Secondary.TButton", command=self.refresh).pack(
             side=tk.LEFT, padx=(8, 0)
         )
 
         filters = ttk.Frame(frame)
-        filters.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 8))
+        filters.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 8))
         for field in FILTER_FIELDS:
-            ttk.Label(filters, text=field.title()).pack(side=tk.LEFT, padx=(0, 4))
+            ttk.Label(filters, text=field.title(), style="Muted.TLabel").pack(
+                side=tk.LEFT, padx=(0, 4)
+            )
             var = tk.StringVar(value=ALL)
-            box = ttk.Combobox(filters, textvariable=var, state="readonly", width=22)
+            box = ttk.Combobox(filters, textvariable=var, state="readonly", width=20)
             box.pack(side=tk.LEFT, padx=(0, 12))
             var.trace_add("write", lambda *_args, current=field: self._on_filter_change(current))
             self.filter_vars[field] = var
             self.filter_boxes[field] = box
 
         self.tree = ttk.Treeview(frame, columns=COLUMNS, show="headings")
+        self.tree.tag_configure("odd", background=ROW_ODD)
+        self.tree.tag_configure("even", background=ROW_EVEN)
         for col in COLUMNS:
             self.tree.heading(col, text=col.replace("_", " ").title())
             self.tree.column(col, width=120, stretch=True)
         self.tree.column("id", width=50, stretch=False)
-        self.tree.column("text", width=320)
+        self.tree.column("text", width=360)
 
         yscroll = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.tree.yview)
         xscroll = ttk.Scrollbar(frame, orient=tk.HORIZONTAL, command=self.tree.xview)
         self.tree.configure(yscrollcommand=yscroll.set, xscrollcommand=xscroll.set)
 
-        self.tree.grid(row=2, column=0, sticky="nsew")
-        yscroll.grid(row=2, column=1, sticky="ns")
-        xscroll.grid(row=3, column=0, sticky="ew")
-        frame.rowconfigure(2, weight=1)
+        self.tree.grid(row=3, column=0, sticky="nsew")
+        yscroll.grid(row=3, column=1, sticky="ns")
+        xscroll.grid(row=4, column=0, sticky="ew")
+        frame.rowconfigure(3, weight=1)
         frame.columnconfigure(0, weight=1)
 
     def clear_filters(self):
@@ -148,13 +166,22 @@ class EntityPage(tk.Tk):
         query = self.search_var.get().strip().lower()
         selected = self._selected_filters()
         self.tree.delete(*self.tree.get_children())
+        shown = 0
         for entity in self.entities:
             if any(getattr(entity, field) != value for field, value in selected.items()):
                 continue
             if query and query not in _search_blob(entity):
                 continue
-            self.tree.insert("", tk.END, values=_entity_values(entity))
+            tag = "even" if shown % 2 == 0 else "odd"
+            self.tree.insert("", tk.END, values=_entity_values(entity), tags=(tag,))
+            shown += 1
+        self.count_label.config(text=f"Showing {shown} of {len(self.entities)}")
 
 
 if __name__ == "__main__":
-    EntityPage().mainloop()
+    root = tk.Tk()
+    apply_theme(root)
+    root.title("Learning Entities")
+    root.geometry("1180x640")
+    EntityPage(root).pack(fill=tk.BOTH, expand=True)
+    root.mainloop()
