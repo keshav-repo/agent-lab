@@ -59,7 +59,7 @@ class EntityPage(ttk.Frame):
             side=tk.LEFT, padx=(12, 0)
         )
         self.count_label = ttk.Label(header, text="", style="Muted.TLabel")
-        self.count_label.pack(side=tk.RIGHT)
+        self.count_label.pack(side=tk.RIGHT, padx=(0, 130))
 
         toolbar = ttk.Frame(frame)
         toolbar.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 8))
@@ -124,8 +124,17 @@ class EntityPage(ttk.Frame):
 
     def refresh_theme(self):
         palette = colors()
-        self.tree.tag_configure("odd", background=palette["row_odd"])
-        self.tree.tag_configure("even", background=palette["row_even"])
+        self.tree.tag_configure(
+            "odd",
+            background=palette["row_odd"],
+            foreground=palette["text"],
+        )
+        self.tree.tag_configure(
+            "even",
+            background=palette["row_even"],
+            foreground=palette["text"],
+        )
+        self.apply_filter()
 
     def _selected_filters(self, until=None):
         selected = {}
@@ -187,17 +196,17 @@ if __name__ == "__main__":
     apply_theme(root, "light")
     root.title("Learning Entities")
     root.geometry("1180x640")
-    topbar = ttk.Frame(root, padding=(12, 8))
-    topbar.pack(fill=tk.X, side=tk.TOP)
-    theme_btn = ttk.Button(topbar, text=toggle_label(), style="Back.TButton")
     page = EntityPage(root)
+    page.pack(fill=tk.BOTH, expand=True)
+    theme_btn = ttk.Button(root, text=toggle_label(), style="Back.TButton")
 
     def on_toggle():
         toggle_theme(root)
         theme_btn.config(text=toggle_label())
         page.refresh_theme()
+        theme_btn.lift()
 
     theme_btn.config(command=on_toggle)
-    theme_btn.pack(side=tk.RIGHT)
-    page.pack(fill=tk.BOTH, expand=True)
+    theme_btn.place(relx=1.0, x=-12, y=10, anchor="ne")
+    theme_btn.lift()
     root.mainloop()

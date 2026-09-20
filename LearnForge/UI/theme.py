@@ -23,8 +23,8 @@ THEMES = {
         "accent_hover": "#0284c7",
         "text": "#f8fafc",
         "muted": "#94a3b8",
-        "row_odd": "#1e293b",
-        "row_even": "#162032",
+        "row_odd": "#1f2937",
+        "row_even": "#111827",
         "header": "#334155",
         "button_fg": "#ffffff",
         "secondary": "#334155",
@@ -127,8 +127,8 @@ def apply_theme(root, mode=None):
 
     style.configure(
         "Treeview",
-        background=c["card"],
-        fieldbackground=c["card"],
+        background=c["row_even"],
+        fieldbackground=c["row_even"],
         foreground=c["text"],
         rowheight=28,
         borderwidth=0,
@@ -142,8 +142,21 @@ def apply_theme(root, mode=None):
     )
     style.map(
         "Treeview",
-        background=[("selected", c["accent"])],
-        foreground=[("selected", c["selected_fg"])],
+        background=[("selected", c["accent"]), ("!selected", c["row_even"])],
+        foreground=[("selected", c["selected_fg"]), ("!selected", c["text"])],
+    )
+    style.map(
+        "Treeview",
+        foreground=[
+            elm
+            for elm in style.map("Treeview", query_opt="foreground")
+            if elm[:2] != ("!disabled", "!selected")
+        ],
+        background=[
+            elm
+            for elm in style.map("Treeview", query_opt="background")
+            if elm[:2] != ("!disabled", "!selected")
+        ],
     )
     style.configure(
         "TScrollbar",

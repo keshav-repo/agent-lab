@@ -24,18 +24,17 @@ class HomePage(tk.Tk):
         self.show_home()
 
     def _build_shell(self):
-        topbar = ttk.Frame(self, padding=(12, 8))
-        topbar.pack(fill=tk.X, side=tk.TOP)
+        self.content = ttk.Frame(self)
+        self.content.pack(fill=tk.BOTH, expand=True)
+
         self.theme_btn = ttk.Button(
-            topbar,
+            self,
             text=toggle_label(),
             style="Back.TButton",
             command=self.on_toggle_theme,
         )
-        self.theme_btn.pack(side=tk.RIGHT)
-
-        self.content = ttk.Frame(self)
-        self.content.pack(fill=tk.BOTH, expand=True)
+        self.theme_btn.place(relx=1.0, x=-12, y=10, anchor="ne")
+        self.theme_btn.lift()
 
     def _build_home(self):
         self.home_frame = ttk.Frame(self.content, padding=48)
@@ -80,6 +79,7 @@ class HomePage(tk.Tk):
         self.geometry("780x520")
         self.title("LearnForge")
         self.home_frame.pack(fill=tk.BOTH, expand=True)
+        self.theme_btn.lift()
 
     def show_entities(self):
         self.home_frame.pack_forget()
@@ -89,6 +89,7 @@ class HomePage(tk.Tk):
             self.entity_page = EntityPage(self.content, on_back=self.show_home)
         self.entity_page.pack(fill=tk.BOTH, expand=True)
         self.entity_page.refresh()
+        self.theme_btn.lift()
 
     def download_excel(self):
         self.todo_label.config(text="Download Excel — coming soon")
