@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 class LearningEntity(BaseModel):
-    id: str | None = None
+    id: int | None = None
     text: str
 
     category: str
@@ -10,5 +10,4 @@ class LearningEntity(BaseModel):
     subtopic: str | None = None
     concept: str | None = None
     tags: list[str] = Field(default_factory=list)
-
 
