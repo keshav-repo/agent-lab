@@ -1,0 +1,7 @@
+.venv
+__pycache__/
+jsons/
+.idea/
+jsons
+
+uv.lock
