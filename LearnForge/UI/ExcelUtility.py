@@ -1,5 +1,30 @@
+import sys
 import tkinter as tk
-from tkinter import ttk
+from pathlib import Path
+from tkinter import filedialog, ttk
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from openpyxl import Workbook
+
+from sqlLiteDB import get_all_learning_entities
+
+COLUMNS = ("id", "text", "category", "subcategory", "topic", "subtopic", "concept", "tags")
+
+
+def _row_values(entity):
+    return (
+        entity.id,
+        entity.text,
+        entity.category,
+        entity.subcategory or "",
+        entity.topic or "",
+        entity.subtopic or "",
+        entity.concept or "",
+        ", ".join(entity.tags),
+    )
 
 
 class ExcelUtility(ttk.Frame):
@@ -46,7 +71,26 @@ class ExcelUtility(ttk.Frame):
         self.status_label.pack(pady=(28, 0))
 
     def download_learning_entity(self):
-        self.status_label.config(text="Download Learning Entity — coming soon")
+        path = filedialog.asksaveasfilename(
+            parent=self.winfo_toplevel(),
+            title="Save Learning Entities",
+            defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx")],
+            initialfile="learning_entities.xlsx",
+        )
+        if not path:
+            self.status_label.config(text="Download cancelled")
+            return
+
+        entities = get_all_learning_entities()
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "Learning Entities"
+        sheet.append(list(COLUMNS))
+        for entity in entities:
+            sheet.append(list(_row_values(entity)))
+        workbook.save(path)
+        self.status_label.config(text=f"Downloaded {len(entities)} entities")
 
     def update_metadata(self):
         self.status_label.config(text="Update Metadata — coming soon")

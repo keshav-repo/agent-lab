@@ -6,4 +6,5 @@ dependencies = [
     "chromadb>=1.5.9",
     "openai>=3.16.2",
     "python-dotenv>=1.2.3",
+    "openpyxl>=3.1.5",
 ]
