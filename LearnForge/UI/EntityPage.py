@@ -55,9 +55,6 @@ class EntityPage(ttk.Frame):
                 style="Back.TButton",
                 command=self.on_back,
             ).pack(side=tk.LEFT)
-        ttk.Label(header, text="Learning Entities", style="Heading.TLabel").pack(
-            side=tk.LEFT, padx=(12, 0)
-        )
         self.count_label = ttk.Label(header, text="", style="Muted.TLabel")
         self.count_label.pack(side=tk.RIGHT, padx=(0, 130))
 

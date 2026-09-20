@@ -8,6 +8,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from EntityPage import EntityPage
+from ExcelUtility import ExcelUtility
 from theme import apply_theme, toggle_label, toggle_theme
 
 
@@ -19,6 +20,7 @@ class HomePage(tk.Tk):
         self.minsize(720, 480)
         self.geometry("780x520")
         self.entity_page = None
+        self.excel_page = None
         self._build_shell()
         self._build_home()
         self.show_home()
@@ -59,13 +61,10 @@ class HomePage(tk.Tk):
 
         ttk.Button(
             actions,
-            text="Download Excel",
+            text="Excel Utility",
             style="Secondary.TButton",
-            command=self.download_excel,
+            command=self.show_excel,
         ).pack(fill=tk.X, pady=8, ipadx=48)
-
-        self.todo_label = ttk.Label(self.home_frame, text="", style="Muted.TLabel")
-        self.todo_label.pack(pady=(28, 0))
 
     def on_toggle_theme(self):
         toggle_theme(self)
@@ -73,16 +72,22 @@ class HomePage(tk.Tk):
         if self.entity_page is not None:
             self.entity_page.refresh_theme()
 
-    def show_home(self):
+    def _hide_pages(self):
+        self.home_frame.pack_forget()
         if self.entity_page is not None:
             self.entity_page.pack_forget()
+        if self.excel_page is not None:
+            self.excel_page.pack_forget()
+
+    def show_home(self):
+        self._hide_pages()
         self.geometry("780x520")
         self.title("LearnForge")
         self.home_frame.pack(fill=tk.BOTH, expand=True)
         self.theme_btn.lift()
 
     def show_entities(self):
-        self.home_frame.pack_forget()
+        self._hide_pages()
         self.geometry("1180x640")
         self.title("Learning Entities")
         if self.entity_page is None:
@@ -91,8 +96,14 @@ class HomePage(tk.Tk):
         self.entity_page.refresh()
         self.theme_btn.lift()
 
-    def download_excel(self):
-        self.todo_label.config(text="Download Excel — coming soon")
+    def show_excel(self):
+        self._hide_pages()
+        self.geometry("780x520")
+        self.title("Excel Utility")
+        if self.excel_page is None:
+            self.excel_page = ExcelUtility(self.content, on_back=self.show_home)
+        self.excel_page.pack(fill=tk.BOTH, expand=True)
+        self.theme_btn.lift()
 
 
 if __name__ == "__main__":
