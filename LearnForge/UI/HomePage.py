@@ -9,6 +9,7 @@ if str(ROOT) not in sys.path:
 
 from EntityPage import EntityPage
 from ExcelUtility import ExcelUtility
+from JsonUtility import JsonUtility
 from theme import apply_theme, toggle_label, toggle_theme
 
 
@@ -21,6 +22,7 @@ class HomePage(tk.Tk):
         self.geometry("780x520")
         self.entity_page = None
         self.excel_page = None
+        self.json_page = None
         self._build_shell()
         self._build_home()
         self.show_home()
@@ -66,6 +68,13 @@ class HomePage(tk.Tk):
             command=self.show_excel,
         ).pack(fill=tk.X, pady=8, ipadx=48)
 
+        ttk.Button(
+            actions,
+            text="Json Utility",
+            style="Secondary.TButton",
+            command=self.show_json,
+        ).pack(fill=tk.X, pady=8, ipadx=48)
+
     def on_toggle_theme(self):
         toggle_theme(self)
         self.theme_btn.config(text=toggle_label())
@@ -78,6 +87,8 @@ class HomePage(tk.Tk):
             self.entity_page.pack_forget()
         if self.excel_page is not None:
             self.excel_page.pack_forget()
+        if self.json_page is not None:
+            self.json_page.pack_forget()
 
     def show_home(self):
         self._hide_pages()
@@ -103,6 +114,15 @@ class HomePage(tk.Tk):
         if self.excel_page is None:
             self.excel_page = ExcelUtility(self.content, on_back=self.show_home)
         self.excel_page.pack(fill=tk.BOTH, expand=True)
+        self.theme_btn.lift()
+
+    def show_json(self):
+        self._hide_pages()
+        self.geometry("780x520")
+        self.title("JSON Utility")
+        if self.json_page is None:
+            self.json_page = JsonUtility(self.content, on_back=self.show_home)
+        self.json_page.pack(fill=tk.BOTH, expand=True)
         self.theme_btn.lift()
 
 

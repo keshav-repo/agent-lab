@@ -22,4 +22,6 @@ def UploadLearningItems():
         if path.is_file():
             path.unlink()
 
-
+def UploadFiles():
+    # to do
+    print("UploadFiles function is not implemented yet.")
