@@ -8,7 +8,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from sqlLiteDB import get_all_learning_entities
-from theme import ROW_EVEN, ROW_ODD, apply_theme
+from theme import apply_theme, colors, toggle_label, toggle_theme
 
 COLUMNS = ("id", "text", "category", "subcategory", "topic", "subtopic", "concept", "tags")
 FILTER_FIELDS = ("category", "subcategory", "topic", "subtopic")
@@ -91,8 +91,7 @@ class EntityPage(ttk.Frame):
             self.filter_boxes[field] = box
 
         self.tree = ttk.Treeview(frame, columns=COLUMNS, show="headings")
-        self.tree.tag_configure("odd", background=ROW_ODD)
-        self.tree.tag_configure("even", background=ROW_EVEN)
+        self.refresh_theme()
         for col in COLUMNS:
             self.tree.heading(col, text=col.replace("_", " ").title())
             self.tree.column(col, width=120, stretch=True)
@@ -122,6 +121,11 @@ class EntityPage(ttk.Frame):
         self.entities = get_all_learning_entities()
         self._sync_filter_options()
         self.apply_filter()
+
+    def refresh_theme(self):
+        palette = colors()
+        self.tree.tag_configure("odd", background=palette["row_odd"])
+        self.tree.tag_configure("even", background=palette["row_even"])
 
     def _selected_filters(self, until=None):
         selected = {}
@@ -180,8 +184,20 @@ class EntityPage(ttk.Frame):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    apply_theme(root)
+    apply_theme(root, "light")
     root.title("Learning Entities")
     root.geometry("1180x640")
-    EntityPage(root).pack(fill=tk.BOTH, expand=True)
+    topbar = ttk.Frame(root, padding=(12, 8))
+    topbar.pack(fill=tk.X, side=tk.TOP)
+    theme_btn = ttk.Button(topbar, text=toggle_label(), style="Back.TButton")
+    page = EntityPage(root)
+
+    def on_toggle():
+        toggle_theme(root)
+        theme_btn.config(text=toggle_label())
+        page.refresh_theme()
+
+    theme_btn.config(command=on_toggle)
+    theme_btn.pack(side=tk.RIGHT)
+    page.pack(fill=tk.BOTH, expand=True)
     root.mainloop()
