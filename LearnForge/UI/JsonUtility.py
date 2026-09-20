@@ -1,5 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import filedialog, ttk
+
+from KnowledgeService import UploadFiles, UploadLearningItems
 
 
 class JsonUtility(ttk.Frame):
@@ -42,11 +44,31 @@ class JsonUtility(ttk.Frame):
             command=self.multiple_json_upload,
         ).pack(fill=tk.X, pady=8, ipadx=48)
 
+        ttk.Button(
+            actions,
+            text="process File",
+            style="Secondary.TButton",
+            command=self.process_file,
+        ).pack(fill=tk.X, pady=8, ipadx=48)
+
         self.status_label = ttk.Label(self, text="", style="Muted.TLabel")
         self.status_label.pack(pady=(28, 0))
 
     def single_json_upload(self):
-        self.status_label.config(text="Single Json Upload — coming soon")
+        file_path = filedialog.askopenfilename(
+            title="Select JSON file",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+        )
+        if not file_path:
+            self.status_label.config(text="No file selected.")
+            return
+
+        UploadFiles([file_path])
+        self.status_label.config(text="File uploaded successfully.")
 
     def multiple_json_upload(self):
         self.status_label.config(text="Multiple Json Upload — coming soon")
+
+    def process_file(self):
+        UploadLearningItems()
+        self.status_label.config(text="Files processed successfully.")
