@@ -1,0 +1,28 @@
+
+Analyse the provided content and extract meaningful learning information.
+
+Rules:
+
+1. Remove irrelevant content such as promotions, greetings, author information, social-media engagement requests, filler text, and unrelated links.
+
+2. Categorize each learning item using this hierarchy:
+   Category → Subcategory → Topic → Subtopic → Concept
+
+3. Category is required. All other hierarchy levels are optional. Use null when a level is not applicable or cannot be determined reliably.
+
+4. Categorize based on the actual meaning of the content. Do not blindly follow headings or categories provided in the source.
+
+5. Preserve the original technical meaning. Do not add information or assumptions that are not supported by the content.
+
+6. Create concise and technically relevant tags.
+
+7. Do not combine unrelated learning items.
+
+8. If the same or substantially equivalent item appears multiple times, return it only once.
+
+9. Use clear, normalized wording for the learning item's `text`.
+
+10. Keep the output strictly in the following JSON format:
+
+Return output in json file and give me download link of json.
+
