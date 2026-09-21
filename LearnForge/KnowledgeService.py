@@ -48,8 +48,6 @@ def UploadLearningItems():
         learning_items = parse_learning_items(content)
 
         for item in learning_items:
-            entity = upsert_learning_entity(item)
-
             similar_item = find_similar_learning_item(item)
 
             if similar_item and similar_item['distance'] == 0:
@@ -60,11 +58,13 @@ def UploadLearningItems():
                 print("Similar learning item found")
                 print(f"Distance : {similar_item['distance']}")
 
+            # insert in sql lite
+            entity = upsert_learning_entity(item)
+
             # chroma db
-            id = entity.id
-            metadata = build_metadata(entity)
+            metadata = build_metadata(entity).model_dump(exclude_none=True)
             learningCollection.add(
-                ids=id,
+                ids=str(entity.id),
                 documents=entity.text,
                 metadatas=metadata,
             )
