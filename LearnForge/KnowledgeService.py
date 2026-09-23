@@ -1,85 +1,51 @@
-from pathlib import Path
-import shutil
-
-from Constants import BASE_PATH, SIMILARITY_THRESHOLD
-from fs_utils import list_files, readFile
+from logger import L
+from Agents.DublicateAgentOrchestrator import find_items_to_save
+from Constants import BASE_PATH, DUPLICATE_DISTANCE_THRESHOLD, SIMILARITY_DISTANCE_THRESHOLD
+from DbUtility import find_nearest_learning_item, save_in_db
+from fs_utils import list_files, readFile, delete_all_files
 from helper import parse_learning_items
-from models import LearningEntity, LearningMetadata
-from sqlLiteDB import upsert_learning_entity
-from vectorDb import learningCollection
+from models import DuplicateCheck
 
-def build_metadata(item: LearningEntity) -> LearningMetadata:
-    return LearningMetadata(
-        category=item.category,
-        subcategory=item.subcategory,
-        topic=item.topic,
-        subtopic=item.subtopic,
-        concept=item.concept,
-    )
-
-def find_similar_learning_item(entity: LearningEntity):
-    results = learningCollection.query(
-        query_texts=[entity.text],
-        n_results=1,
-        include=["documents", "metadatas", "distances"]
-    )
-
-    if not results["ids"] or not results["ids"][0]:
-        return None
-
-    distance = results["distances"][0][0]
-
-    if distance <= SIMILARITY_THRESHOLD:
-        return {
-            "id": results["ids"][0][0],
-            "document": results["documents"][0][0],
-            "metadata": results["metadatas"][0][0],
-            "distance": distance
-        }
-
-    return None
 
 def UploadLearningItems():
+    L.info("Upload Learning Items and process")
     for file_name in list_files(BASE_PATH):
         if not file_name.endswith('.json'):
             continue
 
+        L.info("Processing file: %s", file_name)
         content = readFile(BASE_PATH, file_name)
         learning_items = parse_learning_items(content)
+        items_for_duplicate_check = []
+        items_to_save = []
 
         for item in learning_items:
-            similar_item = find_similar_learning_item(item)
+           nearestItems = find_nearest_learning_item(item)
+           if len(nearestItems) == 0:
+               L.info("Found no nearest items for %s", item.text)
+               items_to_save.append(item)
+               continue
 
-            if similar_item and similar_item['distance'] == 0:
-                print('exact item')
-                continue
+           first_Nearest_Item = nearestItems[0]
+           distance = first_Nearest_Item.distance
+           if(distance == 0):
+               L.info("Exact match found, skipping item: %s", item.text)
+               continue
+           elif(distance <= DUPLICATE_DISTANCE_THRESHOLD):
+               L.info("Below Dublicate Threashold, skipping item: %s", item.text)
+               continue
+           elif(distance <= SIMILARITY_DISTANCE_THRESHOLD):
+               L.info("to check for dublicate: %s", item.text)
+               items_for_duplicate_check.append(DuplicateCheck(item=item, candidates=nearestItems))
+           else:
+                L.info("new item found, distance greater than threshold")
+                items_to_save.append(item)
 
-            if similar_item and similar_item['distance'] <= SIMILARITY_THRESHOLD:
-                print("Similar learning item found")
-                print(f"Distance : {similar_item['distance']}")
+        new_items = find_items_to_save(items_for_duplicate_check)
+        items_to_save.extend(new_items)
 
-            # insert in sql lite
-            entity = upsert_learning_entity(item)
-
-            # chroma db
-            metadata = build_metadata(entity).model_dump(exclude_none=True)
-            learningCollection.add(
-                ids=str(entity.id),
-                documents=entity.text,
-                metadatas=metadata,
-            )
+        for item in items_to_save:
+            save_in_db(item)
 
     # Delete all files after parsing
-    for path in Path(BASE_PATH).iterdir():
-        if path.is_file():
-            path.unlink()
-
-def UploadFiles(file_paths):
-    destination = Path(BASE_PATH)
-    destination.mkdir(parents=True, exist_ok=True)
-
-    for file_path in file_paths:
-        source = Path(file_path)
-        if not source.is_file():
-            raise FileNotFoundError(f"File not found: {file_path}")
-        shutil.copy2(source, destination / source.name)
+    delete_all_files(BASE_PATH)

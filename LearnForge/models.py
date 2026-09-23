@@ -1,4 +1,10 @@
-from pydantic import BaseModel, Field
+from enum import StrEnum
+
+from pydantic import BaseModel, Field, field_validator
+
+class DuplicateClassification(StrEnum):
+    DUPLICATE = "DUPLICATE"
+    NEW = "NEW"
 
 class LearningEntity(BaseModel):
     id: int | None = None
@@ -17,3 +23,25 @@ class LearningMetadata(BaseModel):
     topic: str | None = None
     subtopic: str | None = None
     concept: str | None = None
+
+class NearestLearningItem(BaseModel):
+    id: str
+    document: str
+    distance: float
+
+class DuplicateCheckResult(BaseModel):
+    classification: DuplicateClassification
+    matched_id: str | None = None
+    canonical_question: str = ""
+    reason: str = ""
+
+    @field_validator("matched_id", mode="before")
+    @classmethod
+    def coerce_matched_id(cls, value):
+        if value is None:
+            return None
+        return str(value)
+
+class DuplicateCheck(BaseModel):
+    item: LearningEntity
+    candidates: list[NearestLearningItem]

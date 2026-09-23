@@ -5,7 +5,7 @@ from pathlib import Path
 from models import LearningEntity
 
 DB_PATH = Path(__file__).resolve().parent / "knowledge.db"
-conn = sqlite3.connect(DB_PATH)
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 
 CREATE_LEARNING_ENTITIES = """
 CREATE TABLE IF NOT EXISTS learning_entities (

@@ -12,7 +12,6 @@ from ExcelUtility import ExcelUtility
 from JsonUtility import JsonUtility
 from theme import apply_theme, toggle_label, toggle_theme
 
-
 class HomePage(tk.Tk):
     def __init__(self):
         super().__init__()

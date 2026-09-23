@@ -1,27 +1,29 @@
-from fs_utils import list_files, readFile
-from helper import parse_learning_items
-from vectorDb import learningCollection
+from openai import AsyncOpenAI
+from agents import Agent, OpenAIChatCompletionsModel, Runner, set_tracing_disabled
 
-base_path = '/Users/keshavkumar/learn26/agent-lab/LearnForge/jsons'
+set_tracing_disabled(True)
 
+MODEL_NAME = "llama3.2"
 
-def build_metadata(item):
-    metadata = item.model_dump(exclude={"id", "text", "tags"}, exclude_none=True)
-    if item.tags:
-        metadata["tags"] = ", ".join(item.tags)
-    return metadata
+client = AsyncOpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama",
+)
 
+INSTRUCTIONS = """
+you are a communication agent to heal someone
+"""
 
-for file_name in list_files(base_path):
-    if not file_name.endswith('.json'):
-        continue
+sample_agent = Agent(
+    name="Search Agent",
+    instructions=INSTRUCTIONS,
+    model=OpenAIChatCompletionsModel(
+        model=MODEL_NAME,
+        openai_client=client,
+    ),
+)
 
-    content = readFile(base_path, file_name)
-    learning_items = parse_learning_items(content)
-
-    learningCollection.upsert(
-        ids=[item.id or f'{file_name}:{index}' for index, item in enumerate(learning_items)],
-        documents=[item.text for item in learning_items],
-        metadatas=[build_metadata(item) for item in learning_items],
-    )
+if __name__ == "__main__":
+    result = Runner.run_sync(sample_agent, "Hello!")
+    print(result.final_output)
 
