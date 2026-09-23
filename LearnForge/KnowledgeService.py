@@ -4,7 +4,8 @@ from Constants import BASE_PATH, DUPLICATE_DISTANCE_THRESHOLD, SIMILARITY_DISTAN
 from DbUtility import find_nearest_learning_item, save_in_db
 from fs_utils import list_files, readFile, delete_all_files
 from helper import parse_learning_items
-from models import DuplicateCheck
+from models import DuplicateCheck, LearningEntityAlias
+from sqlLiteDB import get_LearningEntity_join_aliasCount
 
 
 def UploadLearningItems():
@@ -49,3 +50,8 @@ def UploadLearningItems():
 
     # Delete all files after parsing
     delete_all_files(BASE_PATH)
+
+def get_LearningItems() -> list[LearningEntityAlias]:
+    L.info("Get Learning Items called")
+    res =  get_LearningEntity_join_aliasCount()
+    return res

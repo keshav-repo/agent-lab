@@ -50,3 +50,6 @@ class Alias(BaseModel):
     aliasId: int | None = None
     alias: str
     parentId: int
+
+class LearningEntityAlias(LearningEntity):
+    aliasCount: int | None = None

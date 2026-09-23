@@ -7,10 +7,20 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from sqlLiteDB import get_all_learning_entities
+from KnowledgeService import get_LearningItems
 from theme import apply_theme, colors, toggle_label, toggle_theme
 
-COLUMNS = ("id", "text", "category", "subcategory", "topic", "subtopic", "concept", "tags")
+COLUMNS = (
+    "id",
+    "text",
+    "category",
+    "subcategory",
+    "topic",
+    "subtopic",
+    "concept",
+    "tags",
+    "aliasCount",
+)
 FILTER_FIELDS = ("category", "subcategory", "topic", "subtopic")
 ALL = "All"
 
@@ -25,6 +35,7 @@ def _entity_values(entity):
         entity.subtopic or "",
         entity.concept or "",
         ", ".join(entity.tags),
+        entity.aliasCount or 0,
     )
 
 
@@ -94,6 +105,7 @@ class EntityPage(ttk.Frame):
             self.tree.column(col, width=120, stretch=True)
         self.tree.column("id", width=50, stretch=False)
         self.tree.column("text", width=360)
+        self.tree.column("aliasCount", width=90, stretch=False)
 
         yscroll = ttk.Scrollbar(frame, orient=tk.VERTICAL, command=self.tree.yview)
         xscroll = ttk.Scrollbar(frame, orient=tk.HORIZONTAL, command=self.tree.xview)
@@ -115,7 +127,7 @@ class EntityPage(ttk.Frame):
         self.apply_filter()
 
     def refresh(self):
-        self.entities = get_all_learning_entities()
+        self.entities = get_LearningItems()
         self._sync_filter_options()
         self.apply_filter()
 
