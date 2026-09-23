@@ -45,3 +45,8 @@ class DuplicateCheckResult(BaseModel):
 class DuplicateCheck(BaseModel):
     item: LearningEntity
     candidates: list[NearestLearningItem]
+
+class Alias(BaseModel):
+    aliasId: int | None = None
+    alias: str
+    parentId: int

@@ -2,7 +2,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from logger import L
 from Agents.duplicate_detection_agent import check_duplicate
-from models import DuplicateCheck, DuplicateClassification, LearningEntity
+from models import DuplicateCheck, DuplicateClassification, LearningEntity, Alias
+from sqlLiteDB import upsert_alias
+
 
 def find_items_to_save(items_for_duplicate_check: list[DuplicateCheck]) -> list[LearningEntity]:
     items_to_save: list[LearningEntity] = []
@@ -23,6 +25,12 @@ def find_items_to_save(items_for_duplicate_check: list[DuplicateCheck]) -> list[
             if result.classification != DuplicateClassification.DUPLICATE:
                 items_to_save.append(item)
             else:
-                L.info("Duplicate found, skipping item: %s", item.text)
+                L.info("Duplicate found, Adding in Alias table: %s", item.text)
+                alias: Alias = Alias(
+                    aliasId=None,
+                    alias=item.text,
+                    parentId=int(result.matched_id) if result.matched_id else None
+                )
+                upsert_alias(alias)
 
     return items_to_save

@@ -2,7 +2,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from models import LearningEntity
+from models import LearningEntity, Alias
 
 DB_PATH = Path(__file__).resolve().parent / "knowledge.db"
 conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -20,7 +20,17 @@ CREATE TABLE IF NOT EXISTS learning_entities (
 )
 """
 
+CREATE_ALIASES = """
+CREATE TABLE IF NOT EXISTS aliases (
+    aliasId INTEGER PRIMARY KEY AUTOINCREMENT,
+    alias TEXT NOT NULL,
+    parentId INTEGER NOT NULL,
+    FOREIGN KEY (parentId) REFERENCES learning_entities(id)
+)
+"""
+
 conn.execute(CREATE_LEARNING_ENTITIES)
+conn.execute(CREATE_ALIASES)
 conn.commit()
 
 def upsert_learning_entity(entity: LearningEntity) -> LearningEntity:
@@ -91,4 +101,15 @@ def get_all_learning_entities() -> list[LearningEntity]:
     ).fetchall()
     return [_to_learning_entity(row) for row in rows]
 
-
+def upsert_alias(alias: Alias):
+    conn.execute(
+        """
+        INSERT INTO aliases (aliasId, alias, parentId)
+        VALUES (?, ?, ?)
+        ON CONFLICT(aliasId) DO UPDATE SET
+            alias = excluded.alias,
+            parentId = excluded.parentId
+        """,
+        (alias.aliasId, alias.alias, alias.parentId),
+    )
+    conn.commit()
