@@ -19,12 +19,20 @@ class HomePage(tk.Tk):
         self.title("LearnForge")
         self.minsize(720, 480)
         self.geometry("780x520")
+        self._set_icon()
         self.entity_page = None
         self.excel_page = None
         self.json_page = None
         self._build_shell()
         self._build_home()
         self.show_home()
+
+    def _set_icon(self):
+        icon_path = Path(__file__).resolve().parent / "app_icon_256.png"
+        if not icon_path.exists():
+            return
+        self._icon_image = tk.PhotoImage(file=str(icon_path))
+        self.iconphoto(True, self._icon_image)
 
     def _build_shell(self):
         self.content = ttk.Frame(self)
