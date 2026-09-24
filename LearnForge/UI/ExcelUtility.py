@@ -3,6 +3,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, ttk
 
+from KnowledgeService import update_metadata_using_excel
+
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -127,4 +129,6 @@ class ExcelUtility(ttk.Frame):
             return
 
         UploadFiles([file_path])
+        # call meta data upload
+        update_metadata_using_excel()
         self.status_label.config(text="Excel file uploaded successfully.")

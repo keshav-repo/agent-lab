@@ -1,7 +1,7 @@
 import threading
 
-from models import LearningEntity, LearningMetadata, NearestLearningItem
-from sqlLiteDB import upsert_learning_entity
+from models import LearningEntity, LearningEntityWithAliases, LearningMetadata, NearestLearningItem
+from sqlLiteDB import update_metadata, upsert_learning_entity
 from vectorDb import learningCollection
 
 save_in_db_lock = threading.Lock()
@@ -49,3 +49,7 @@ def save_in_db(entity: LearningEntity):
             documents=entity.text,
             metadatas=metadata,
         )
+
+def update_metadata_in_db(entities: list[LearningEntityWithAliases]):
+    with save_in_db_lock:
+        update_metadata(entities)

@@ -1,9 +1,10 @@
+from ExcelUtils import readExcel
 from logger import L
 from Agents.DublicateAgentOrchestrator import find_items_to_save
 from Constants import BASE_PATH, DUPLICATE_DISTANCE_THRESHOLD, SIMILARITY_DISTANCE_THRESHOLD
-from DbUtility import find_nearest_learning_item, save_in_db
+from DbUtility import find_nearest_learning_item, save_in_db, update_metadata_in_db
 from fs_utils import list_files, readFile, delete_all_files
-from helper import parse_learning_items
+from helper import parse_learning_items, readEntry_fromExcel
 from models import DuplicateCheck, LearningEntityAliasCount
 from sqlLiteDB import get_LearningEntity_join_aliasCount
 
@@ -55,3 +56,9 @@ def get_LearningItems() -> list[LearningEntityAliasCount]:
     L.info("Get Learning Items called")
     res =  get_LearningEntity_join_aliasCount()
     return res
+
+def update_metadata_using_excel():
+    L.info("Update Learning Metadata")
+    entityList = readEntry_fromExcel()
+    update_metadata_in_db(entityList)
+    delete_all_files(BASE_PATH)

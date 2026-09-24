@@ -1,8 +1,8 @@
 .venv
 __pycache__/
-files/
+jsons/
 .idea/
-files
+jsons
 
 uv.lock
 data
@@ -10,4 +10,5 @@ knowledge.db
 main4.py
 main.py
 main2.py
+
 

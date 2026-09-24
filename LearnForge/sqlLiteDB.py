@@ -163,3 +163,22 @@ def get_LearningEntity_join_alias() -> list[LearningEntityWithAliases]:
         )
         for row in rows
     ]
+
+def update_metadata(list: list[LearningEntityWithAliases]):
+    for entity in list:
+        conn.execute(
+            """
+            UPDATE learning_entities
+            SET category = ?, subcategory = ?, topic = ?, subtopic = ?, concept = ?
+            WHERE id = ?
+            """,
+            (
+                entity.category,
+                entity.subcategory,
+                entity.topic,
+                entity.subtopic,
+                entity.concept,
+                entity.id,
+            ),
+        )
+    conn.commit()
