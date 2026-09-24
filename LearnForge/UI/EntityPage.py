@@ -3,6 +3,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, ttk
 
+from openpyxl import Workbook
+from openpyxl.styles import Alignment
 from pdfUtil import convert_to_pdf
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -89,6 +91,9 @@ class EntityPage(ttk.Frame):
         ttk.Button(toolbar, text="Download PDF", style="Secondary.TButton", command=self.download_pdf).pack(
             side=tk.LEFT, padx=(8, 0)
         )
+        ttk.Button(toolbar, text="Download Excel", style="Secondary.TButton", command=self.download_excel).pack(
+            side=tk.LEFT, padx=(8, 0)
+        )
 
         filters = ttk.Frame(frame)
         filters.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 8))
@@ -136,12 +141,14 @@ class EntityPage(ttk.Frame):
         self._sync_filter_options()
         self.apply_filter()
 
-    def download_pdf(self):
-        selected_ids = [
+    def _visible_ids(self):
+        return [
             int(self.tree.item(item_id, "values")[0])
             for item_id in self.tree.get_children()
             if self.tree.item(item_id, "values")
         ]
+
+    def download_pdf(self):
         path = filedialog.asksaveasfilename(
             parent=self.winfo_toplevel(),
             title="Save PDF",
@@ -151,8 +158,56 @@ class EntityPage(ttk.Frame):
         )
         if not path:
             return
-        content = get_pdf_content(selected_ids)
+        content = get_pdf_content(self._visible_ids())
         convert_to_pdf(content, path)
+
+    def download_excel(self):
+        path = filedialog.asksaveasfilename(
+            parent=self.winfo_toplevel(),
+            title="Save Excel",
+            defaultextension=".xlsx",
+            filetypes=[("Excel files", "*.xlsx")],
+            initialfile="learning_entities.xlsx",
+        )
+        if not path:
+            return
+        entities = get_pdf_content(self._visible_ids())
+        columns = (
+            "id",
+            "text",
+            "category",
+            "subcategory",
+            "topic",
+            "subtopic",
+            "concept",
+            "tags",
+            "aliases",
+        )
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "Learning Entities"
+        sheet.append(list(columns))
+        for entity in entities:
+            aliases = "\n".join(f"• {alias}" for alias in entity.aliases if alias)
+            sheet.append(
+                [
+                    entity.id,
+                    entity.text,
+                    entity.category,
+                    entity.subcategory or "",
+                    entity.topic or "",
+                    entity.subtopic or "",
+                    entity.concept or "",
+                    ", ".join(entity.tags),
+                    aliases,
+                ]
+            )
+        aliases_col = columns.index("aliases") + 1
+        sheet.column_dimensions[sheet.cell(1, aliases_col).column_letter].width = 40
+        for row in sheet.iter_rows(min_row=2, min_col=aliases_col, max_col=aliases_col):
+            for cell in row:
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
+        workbook.save(path)
 
     def refresh_theme(self):
         palette = colors()
