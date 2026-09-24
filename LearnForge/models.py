@@ -1,6 +1,13 @@
+import math
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, field_validator
+
+
+def _is_blank(value) -> bool:
+    if value is None or value == "":
+        return True
+    return isinstance(value, float) and math.isnan(value)
 
 class DuplicateClassification(StrEnum):
     DUPLICATE = "DUPLICATE"
@@ -16,6 +23,17 @@ class LearningEntity(BaseModel):
     subtopic: str | None = None
     concept: str | None = None
     tags: list[str] = Field(default_factory=list)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def parse_tags(cls, value):
+        if _is_blank(value):
+            return []
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            return [tag.strip() for tag in value.split(",") if tag.strip()]
+        return value
 
 class LearningMetadata(BaseModel):
     category: str
@@ -56,3 +74,18 @@ class LearningEntityAliasCount(LearningEntity):
 
 class LearningEntityWithAliases(LearningEntity):
     aliases: list[str] = Field(default_factory=list)
+
+    @field_validator("aliases", mode="before")
+    @classmethod
+    def parse_aliases(cls, value):
+        if _is_blank(value):
+            return []
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            return [
+                line.lstrip("•").strip()
+                for line in value.splitlines()
+                if line.strip()
+            ]
+        return value

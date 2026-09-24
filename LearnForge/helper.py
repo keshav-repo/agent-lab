@@ -1,6 +1,11 @@
 import json
+from pathlib import Path
 
-from models import LearningEntity
+from Constants import BASE_PATH
+from ExcelUtils import readExcel
+from fs_utils import list_files
+from models import LearningEntity, LearningEntityWithAliases
+
 
 def to_learning_entity(raw: str) -> LearningEntity:
     return LearningEntity.model_validate_json(raw)
@@ -11,4 +16,17 @@ def parse_learning_items(raw: str) -> list[LearningEntity]:
         to_learning_entity(json.dumps(item))
         for item in payload["learning_items"]
     ]
+
+def readEntry_fromExcel() -> list[LearningEntityWithAliases]:
+    entities = []
+    base_dir = Path(BASE_PATH)
+    for file_name in list_files(base_dir):
+        if not file_name.endswith(".xlsx"):
+            continue
+        df = readExcel(str(base_dir / file_name), "Learning Entities")
+        records = df.where(df.notna(), None).to_dict(orient="records")
+        entities.extend(
+            LearningEntityWithAliases.model_validate(row) for row in records
+        )
+    return entities
 

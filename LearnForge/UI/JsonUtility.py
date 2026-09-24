@@ -45,14 +45,6 @@ class JsonUtility(ttk.Frame):
         )
         self.single_upload_button.pack(fill=tk.X, pady=8, ipadx=48)
 
-        self.multiple_upload_button = ttk.Button(
-            actions,
-            text="Multiple Json Upload",
-            style="Secondary.TButton",
-            command=self.multiple_json_upload,
-        )
-        self.multiple_upload_button.pack(fill=tk.X, pady=8, ipadx=48)
-
         self.process_button = ttk.Button(
             actions,
             text="process File",
@@ -77,9 +69,6 @@ class JsonUtility(ttk.Frame):
 
         UploadFiles([file_path])
         self.status_label.config(text="File uploaded successfully.")
-
-    def multiple_json_upload(self):
-        self.status_label.config(text="Multiple Json Upload — coming soon")
 
     def process_file(self):
         if self._processing_thread and self._processing_thread.is_alive():
@@ -116,7 +105,6 @@ class JsonUtility(ttk.Frame):
     def _set_processing_state(self, is_processing: bool):
         button_state = tk.DISABLED if is_processing else tk.NORMAL
         self.single_upload_button.config(state=button_state)
-        self.multiple_upload_button.config(state=button_state)
         self.process_button.config(state=button_state)
         if self.back_button is not None:
             self.back_button.config(state=button_state)

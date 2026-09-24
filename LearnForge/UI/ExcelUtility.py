@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
 
+from fs_utils import UploadFiles
 from sqlLiteDB import get_LearningEntity_join_alias
 
 COLUMNS = (
@@ -116,4 +117,14 @@ class ExcelUtility(ttk.Frame):
         self.status_label.config(text=f"Downloaded {len(entities)} entities")
 
     def update_metadata(self):
-        self.status_label.config(text="Update Metadata — coming soon")
+        file_path = filedialog.askopenfilename(
+            parent=self.winfo_toplevel(),
+            title="Select Excel file",
+            filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
+        )
+        if not file_path:
+            self.status_label.config(text="No file selected.")
+            return
+
+        UploadFiles([file_path])
+        self.status_label.config(text="Excel file uploaded successfully.")
