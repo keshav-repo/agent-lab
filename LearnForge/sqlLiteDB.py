@@ -2,7 +2,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from models import LearningEntity, Alias, LearningEntityAlias
+from models import LearningEntity, Alias,  LearningEntityWithAliases, LearningEntityAliasCount
 
 DB_PATH = Path(__file__).resolve().parent / "knowledge.db"
 conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -114,7 +114,7 @@ def upsert_alias(alias: Alias):
     )
     conn.commit()
 
-def get_LearningEntity_join_aliasCount() -> list[LearningEntityAlias]:
+def get_LearningEntity_join_aliasCount() -> list[LearningEntityAliasCount]:
     rows = conn.execute(
         """
         SELECT le.id, le.text, le.category, le.subcategory, le.topic, le.subtopic, le.concept, le.tags, COUNT(a.aliasId) as aliasCount
@@ -125,9 +125,41 @@ def get_LearningEntity_join_aliasCount() -> list[LearningEntityAlias]:
         """
     ).fetchall()
     return [
-        LearningEntityAlias(
+        LearningEntityAliasCount(
             **_to_learning_entity(row).model_dump(),
             aliasCount=row[8],
+        )
+        for row in rows
+    ]
+
+def get_LearningEntity_join_alias() -> list[LearningEntityWithAliases]:
+    rows = conn.execute(
+        """
+           SELECT
+                le.id,
+                le.text,
+                le.category,
+                le.subcategory,
+                le.topic,
+                le.subtopic,
+                le.concept,
+                le.tags,
+                COALESCE(
+                    (
+                        SELECT json_group_array(a.alias)
+                        FROM aliases a
+                        WHERE a.parentId = le.id
+                    ),
+                    '[]'
+                ) AS aliases
+            FROM learning_entities le
+            ORDER BY le.id
+        """
+    ).fetchall()
+    return [
+        LearningEntityWithAliases(
+            **_to_learning_entity(row).model_dump(),
+            aliases=json.loads(row[8] or "[]"),
         )
         for row in rows
     ]

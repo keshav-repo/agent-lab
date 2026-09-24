@@ -51,5 +51,8 @@ class Alias(BaseModel):
     alias: str
     parentId: int
 
-class LearningEntityAlias(LearningEntity):
+class LearningEntityAliasCount(LearningEntity):
     aliasCount: int | None = None
+
+class LearningEntityWithAliases(LearningEntity):
+    aliases: list[str] = Field(default_factory=list)

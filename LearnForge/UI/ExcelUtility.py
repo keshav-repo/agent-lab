@@ -8,10 +8,27 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from openpyxl import Workbook
+from openpyxl.styles import Alignment
 
-from sqlLiteDB import get_all_learning_entities
+from sqlLiteDB import get_LearningEntity_join_alias
 
-COLUMNS = ("id", "text", "category", "subcategory", "topic", "subtopic", "concept", "tags")
+COLUMNS = (
+    "id",
+    "text",
+    "category",
+    "subcategory",
+    "topic",
+    "subtopic",
+    "concept",
+    "tags",
+    "aliases",
+)
+
+
+def _aliases_cell(aliases):
+    if not aliases:
+        return ""
+    return "\n".join(f"• {alias}" for alias in aliases)
 
 
 def _row_values(entity):
@@ -24,6 +41,7 @@ def _row_values(entity):
         entity.subtopic or "",
         entity.concept or "",
         ", ".join(entity.tags),
+        _aliases_cell(entity.aliases),
     )
 
 
@@ -82,13 +100,18 @@ class ExcelUtility(ttk.Frame):
             self.status_label.config(text="Download cancelled")
             return
 
-        entities = get_all_learning_entities()
+        entities = get_LearningEntity_join_alias()
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Learning Entities"
         sheet.append(list(COLUMNS))
         for entity in entities:
             sheet.append(list(_row_values(entity)))
+        aliases_col = COLUMNS.index("aliases") + 1
+        sheet.column_dimensions[sheet.cell(1, aliases_col).column_letter].width = 40
+        for row in sheet.iter_rows(min_row=2, min_col=aliases_col, max_col=aliases_col):
+            for cell in row:
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
         workbook.save(path)
         self.status_label.config(text=f"Downloaded {len(entities)} entities")
 
