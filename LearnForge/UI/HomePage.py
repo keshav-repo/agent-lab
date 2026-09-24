@@ -28,7 +28,7 @@ class HomePage(tk.Tk):
         self.show_home()
 
     def _set_icon(self):
-        icon_path = ROOT / "assets" / "app_icon_256.png"
+        icon_path = ROOT / "assets" / "app_icon_128.png"
         if not icon_path.exists():
             return
         self._icon_image = tk.PhotoImage(file=str(icon_path))
