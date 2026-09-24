@@ -164,6 +164,43 @@ def get_LearningEntity_join_alias() -> list[LearningEntityWithAliases]:
         for row in rows
     ]
 
+def get_LearningEntity_join_alias_withIds(ids: list[int]) -> list[LearningEntityWithAliases]:
+    if not ids:
+        return []
+    placeholders = ",".join("?" for _ in ids)
+    rows = conn.execute(
+        f"""
+           SELECT
+                le.id,
+                le.text,
+                le.category,
+                le.subcategory,
+                le.topic,
+                le.subtopic,
+                le.concept,
+                le.tags,
+                COALESCE(
+                    (
+                        SELECT json_group_array(a.alias)
+                        FROM aliases a
+                        WHERE a.parentId = le.id
+                    ),
+                    '[]'
+                ) AS aliases
+            FROM learning_entities le
+            WHERE le.id IN ({placeholders})
+            ORDER BY le.id
+        """,
+        tuple(ids),
+    ).fetchall()
+    return [
+        LearningEntityWithAliases(
+            **_to_learning_entity(row).model_dump(),
+            aliases=json.loads(row[8] or "[]"),
+        )
+        for row in rows
+    ]
+
 def update_metadata(list: list[LearningEntityWithAliases]):
     for entity in list:
         conn.execute(

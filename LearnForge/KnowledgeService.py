@@ -5,8 +5,9 @@ from Constants import BASE_PATH, DUPLICATE_DISTANCE_THRESHOLD, SIMILARITY_DISTAN
 from DbUtility import find_nearest_learning_item, save_in_db, update_metadata_in_db
 from fs_utils import list_files, readFile, delete_all_files
 from helper import parse_learning_items, readEntry_fromExcel, readLearningEntry_fromExcel
-from models import DuplicateCheck, LearningEntityAliasCount, LearningEntity
-from sqlLiteDB import get_LearningEntity_join_aliasCount
+from models import DuplicateCheck, LearningEntityAliasCount, LearningEntity, LearningEntityWithAliases
+from sqlLiteDB import get_LearningEntity_join_aliasCount, get_LearningEntity_join_alias_withIds
+
 
 def processLearningItems(learning_items: list[LearningEntity]):
     items_for_duplicate_check = []
@@ -69,3 +70,8 @@ def upload_learning_entities_using_excel():
     entityList = readLearningEntry_fromExcel()
     processLearningItems(entityList)
     delete_all_files(BASE_PATH)
+
+def get_pdf_content(selectedId: list[int]) -> list[LearningEntityWithAliases]:
+   L.info("Get PDF content with selected ids")
+   res = get_LearningEntity_join_alias_withIds(selectedId)
+   return res

@@ -1,13 +1,15 @@
 import sys
 import tkinter as tk
 from pathlib import Path
-from tkinter import ttk
+from tkinter import filedialog, ttk
+
+from pdfUtil import convert_to_pdf
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from KnowledgeService import get_LearningItems
+from KnowledgeService import get_LearningItems, get_pdf_content
 from theme import apply_theme, colors, toggle_label, toggle_theme
 
 COLUMNS = (
@@ -84,6 +86,9 @@ class EntityPage(ttk.Frame):
         ttk.Button(toolbar, text="Refresh", style="Secondary.TButton", command=self.refresh).pack(
             side=tk.LEFT, padx=(8, 0)
         )
+        ttk.Button(toolbar, text="Download PDF", style="Secondary.TButton", command=self.download_pdf).pack(
+            side=tk.LEFT, padx=(8, 0)
+        )
 
         filters = ttk.Frame(frame)
         filters.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(0, 8))
@@ -130,6 +135,24 @@ class EntityPage(ttk.Frame):
         self.entities = get_LearningItems()
         self._sync_filter_options()
         self.apply_filter()
+
+    def download_pdf(self):
+        selected_ids = [
+            int(self.tree.item(item_id, "values")[0])
+            for item_id in self.tree.get_children()
+            if self.tree.item(item_id, "values")
+        ]
+        path = filedialog.asksaveasfilename(
+            parent=self.winfo_toplevel(),
+            title="Save PDF",
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            initialfile="learning_entities.pdf",
+        )
+        if not path:
+            return
+        content = get_pdf_content(selected_ids)
+        convert_to_pdf(content, path)
 
     def refresh_theme(self):
         palette = colors()
