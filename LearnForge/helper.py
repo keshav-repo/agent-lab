@@ -17,6 +17,7 @@ def parse_learning_items(raw: str) -> list[LearningEntity]:
         for item in payload["learning_items"]
     ]
 
+# This will read the downloaded excel files which will be used to update metadata
 def readEntry_fromExcel() -> list[LearningEntityWithAliases]:
     entities = []
     base_dir = Path(BASE_PATH)
@@ -30,3 +31,15 @@ def readEntry_fromExcel() -> list[LearningEntityWithAliases]:
         )
     return entities
 
+def readLearningEntry_fromExcel() -> list[LearningEntity]:
+    entities = []
+    base_dir = Path(BASE_PATH)
+    for file_name in list_files(base_dir):
+        if not file_name.endswith(".xlsx"):
+            continue
+        df = readExcel(str(base_dir / file_name), "Learning Entities")
+        records = df.where(df.notna(), None).to_dict(orient="records")
+        entities.extend(
+            LearningEntity.model_validate(row) for row in records
+        )
+    return entities

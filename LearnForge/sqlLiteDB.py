@@ -169,15 +169,17 @@ def update_metadata(list: list[LearningEntityWithAliases]):
         conn.execute(
             """
             UPDATE learning_entities
-            SET category = ?, subcategory = ?, topic = ?, subtopic = ?, concept = ?
+            SET text = ?, category = ?, subcategory = ?, topic = ?, subtopic = ?, concept = ?, tags = ?
             WHERE id = ?
             """,
             (
+                entity.text,
                 entity.category,
                 entity.subcategory,
                 entity.topic,
                 entity.subtopic,
                 entity.concept,
+                json.dumps(entity.tags),
                 entity.id,
             ),
         )

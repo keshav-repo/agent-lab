@@ -1,3 +1,4 @@
+import json
 import math
 from enum import StrEnum
 
@@ -30,9 +31,17 @@ class LearningEntity(BaseModel):
         if _is_blank(value):
             return []
         if isinstance(value, list):
-            return value
+            return [str(tag).strip() for tag in value if str(tag).strip()]
         if isinstance(value, str):
-            return [tag.strip() for tag in value.split(",") if tag.strip()]
+            stripped = value.strip()
+            if stripped.startswith("["):
+                try:
+                    parsed = json.loads(stripped)
+                    if isinstance(parsed, list):
+                        return [str(tag).strip() for tag in parsed if str(tag).strip()]
+                except json.JSONDecodeError:
+                    pass
+            return [tag.strip() for tag in stripped.split(",") if tag.strip()]
         return value
 
 class LearningMetadata(BaseModel):

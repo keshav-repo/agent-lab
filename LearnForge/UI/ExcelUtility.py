@@ -3,7 +3,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, ttk
 
-from KnowledgeService import update_metadata_using_excel
+from KnowledgeService import update_metadata_using_excel, upload_learning_entities_using_excel
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -83,9 +83,16 @@ class ExcelUtility(ttk.Frame):
 
         ttk.Button(
             actions,
-            text="Update Metadata",
+            text="Update Learning Entity",
             style="Secondary.TButton",
             command=self.update_metadata,
+        ).pack(fill=tk.X, pady=8, ipadx=48)
+
+        ttk.Button(
+            actions,
+            text="Upload Learning Entity using Excel",
+            style="Secondary.TButton",
+            command=self.upload_learning_entity,
         ).pack(fill=tk.X, pady=8, ipadx=48)
 
         self.status_label = ttk.Label(self, text="", style="Muted.TLabel")
@@ -131,4 +138,18 @@ class ExcelUtility(ttk.Frame):
         UploadFiles([file_path])
         # call meta data upload
         update_metadata_using_excel()
-        self.status_label.config(text="Excel file uploaded successfully.")
+        self.status_label.config(text="Learning entities updated successfully.")
+
+    def upload_learning_entity(self):
+        file_path = filedialog.askopenfilename(
+            parent=self.winfo_toplevel(),
+            title="Select Excel file",
+            filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
+        )
+        if not file_path:
+            self.status_label.config(text="No file selected.")
+            return
+
+        UploadFiles([file_path])
+        upload_learning_entities_using_excel()
+        self.status_label.config(text="Learning entities uploaded successfully.")
