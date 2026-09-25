@@ -38,7 +38,9 @@ def readLearningEntry_fromExcel() -> list[LearningEntity]:
         if not file_name.endswith(".xlsx"):
             continue
         df = readExcel(str(base_dir / file_name), "Learning Entities")
-        records = df.where(df.notna(), None).to_dict(orient="records")
+        # Convert pandas NaN/NaT values to Python None
+        df = df.astype(object).where(df.notna(), None)
+        records = df.to_dict(orient="records")
         entities.extend(
             LearningEntity.model_validate(row) for row in records
         )
