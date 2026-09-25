@@ -31,7 +31,7 @@ def readEntry_fromExcel() -> list[LearningEntityWithAliases]:
         )
     return entities
 
-def readLearningEntry_fromExcel() -> list[LearningEntity]:
+def readLearningEntry_fromExcel() -> list[LearningEntityWithAliases]:
     entities = []
     base_dir = Path(BASE_PATH)
     for file_name in list_files(base_dir):
@@ -42,6 +42,6 @@ def readLearningEntry_fromExcel() -> list[LearningEntity]:
         df = df.astype(object).where(df.notna(), None)
         records = df.to_dict(orient="records")
         entities.extend(
-            LearningEntity.model_validate(row) for row in records
+            LearningEntityWithAliases.model_validate(row) for row in records
         )
     return entities

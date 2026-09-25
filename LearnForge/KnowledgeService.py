@@ -5,8 +5,8 @@ from Constants import BASE_PATH, DUPLICATE_DISTANCE_THRESHOLD, SIMILARITY_DISTAN
 from DbUtility import find_nearest_learning_item, save_in_db, update_metadata_in_db
 from fs_utils import list_files, readFile, delete_all_files
 from helper import parse_learning_items, readEntry_fromExcel, readLearningEntry_fromExcel
-from models import DuplicateCheck, LearningEntityAliasCount, LearningEntity, LearningEntityWithAliases
-from sqlLiteDB import get_LearningEntity_join_aliasCount, get_LearningEntity_join_alias_withIds
+from models import DuplicateCheck, LearningEntityAliasCount, LearningEntity, LearningEntityWithAliases, Alias
+from sqlLiteDB import get_LearningEntity_join_aliasCount, get_LearningEntity_join_alias_withIds, upsert_alias
 
 
 def processLearningItems(learning_items: list[LearningEntity]):
@@ -41,6 +41,15 @@ def processLearningItems(learning_items: list[LearningEntity]):
     for item in items_to_save:
         save_in_db(item)
 
+def processAliases(aliasesList: list[LearningEntityWithAliases]):
+    for item in aliasesList:
+        aliases = item.aliases
+        if len(aliases) != 0:
+            L.info("Processing aliases for item: %s", item.text)
+            for alias in item.aliases:
+                aliasObj = Alias( alias=alias, parentId=item.id)
+                upsert_alias(aliasObj)
+
 def UploadLearningItems():
     L.info("Upload Learning Items and process")
     for file_name in list_files(BASE_PATH):
@@ -69,6 +78,7 @@ def upload_learning_entities_using_excel():
     L.info("Upload Learning Entities from Excel")
     entityList = readLearningEntry_fromExcel()
     processLearningItems(entityList)
+    processAliases(entityList)
     delete_all_files(BASE_PATH)
 
 def get_pdf_content(selectedId: list[int]) -> list[LearningEntityWithAliases]:
