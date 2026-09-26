@@ -4,8 +4,8 @@ from pathlib import Path
 
 from models import LearningEntity, Alias,  LearningEntityWithAliases, LearningEntityAliasCount
 
-DB_PATH = Path(__file__).resolve().parent / "knowledge.db"
-conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+DB_PATH: Path | None = None
+conn: sqlite3.Connection | None = None
 
 CREATE_LEARNING_ENTITIES = """
 CREATE TABLE IF NOT EXISTS learning_entities (
@@ -29,12 +29,31 @@ CREATE TABLE IF NOT EXISTS aliases (
 )
 """
 
-conn.execute(CREATE_LEARNING_ENTITIES)
-conn.execute(CREATE_ALIASES)
-conn.commit()
+
+def init_db(workspace_dir: str | Path) -> Path:
+    global DB_PATH, conn
+    workspace_dir = Path(workspace_dir)
+    workspace_dir.mkdir(parents=True, exist_ok=True)
+
+    if conn is not None:
+        conn.close()
+        conn = None
+
+    DB_PATH = workspace_dir / "knowledge.db"
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.execute(CREATE_LEARNING_ENTITIES)
+    conn.execute(CREATE_ALIASES)
+    conn.commit()
+    return DB_PATH
+
+
+def _get_conn() -> sqlite3.Connection:
+    if conn is None:
+        raise RuntimeError("SQLite is not initialized. Call init_db() first.")
+    return conn
 
 def upsert_learning_entity(entity: LearningEntity) -> LearningEntity:
-    cursor = conn.execute(
+    cursor = _get_conn().execute(
         """
         INSERT INTO learning_entities (
             id, text, category, subcategory, topic, subtopic, concept, tags
@@ -78,7 +97,7 @@ def _to_learning_entity(row) -> LearningEntity:
 
 
 def get_learning_entity_by_id(entity_id: int) -> LearningEntity | None:
-    row = conn.execute(
+    row = _get_conn().execute(
         """
         SELECT id, text, category, subcategory, topic, subtopic, concept, tags
         FROM learning_entities
@@ -92,7 +111,7 @@ def get_learning_entity_by_id(entity_id: int) -> LearningEntity | None:
 
 
 def get_all_learning_entities() -> list[LearningEntity]:
-    rows = conn.execute(
+    rows = _get_conn().execute(
         """
         SELECT id, text, category, subcategory, topic, subtopic, concept, tags
         FROM learning_entities
@@ -102,7 +121,7 @@ def get_all_learning_entities() -> list[LearningEntity]:
     return [_to_learning_entity(row) for row in rows]
 
 def upsert_alias(alias: Alias):
-    conn.execute(
+    _get_conn().execute(
         """
         INSERT INTO aliases (aliasId, alias, parentId)
         VALUES (?, ?, ?)
@@ -115,7 +134,7 @@ def upsert_alias(alias: Alias):
     conn.commit()
 
 def get_LearningEntity_join_aliasCount() -> list[LearningEntityAliasCount]:
-    rows = conn.execute(
+    rows = _get_conn().execute(
         """
         SELECT le.id, le.text, le.category, le.subcategory, le.topic, le.subtopic, le.concept, le.tags, COUNT(a.aliasId) as aliasCount
         FROM learning_entities le
@@ -133,7 +152,7 @@ def get_LearningEntity_join_aliasCount() -> list[LearningEntityAliasCount]:
     ]
 
 def get_LearningEntity_join_alias() -> list[LearningEntityWithAliases]:
-    rows = conn.execute(
+    rows = _get_conn().execute(
         """
            SELECT
                 le.id,
@@ -168,7 +187,7 @@ def get_LearningEntity_join_alias_withIds(ids: list[int]) -> list[LearningEntity
     if not ids:
         return []
     placeholders = ",".join("?" for _ in ids)
-    rows = conn.execute(
+    rows = _get_conn().execute(
         f"""
            SELECT
                 le.id,
@@ -203,7 +222,7 @@ def get_LearningEntity_join_alias_withIds(ids: list[int]) -> list[LearningEntity
 
 def update_metadata(list: list[LearningEntityWithAliases]):
     for entity in list:
-        conn.execute(
+        _get_conn().execute(
             """
             UPDATE learning_entities
             SET text = ?, category = ?, subcategory = ?, topic = ?, subtopic = ?, concept = ?, tags = ?

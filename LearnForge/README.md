@@ -9,7 +9,7 @@ cd LearnForge
 uv venv
 
 # install dependencies
-uv pip install . 
+uv sync
 
 # make the script executable
 chmod +x StartApp.sh 

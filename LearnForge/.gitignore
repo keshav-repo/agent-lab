@@ -5,10 +5,13 @@ jsons/
 jsons
 
 uv.lock
-data
-knowledge.db
+data2
+knowledge2.db
 main4.py
 main.py
 main2.py
+workspaces
+temp_pages
+workspace
 
 

@@ -2,7 +2,7 @@ import threading
 
 from models import LearningEntity, LearningEntityWithAliases, LearningMetadata, NearestLearningItem
 from sqlLiteDB import update_metadata, upsert_learning_entity
-from vectorDb import learningCollection
+from vectorDb import get_learning_collection
 
 save_in_db_lock = threading.Lock()
 
@@ -16,7 +16,7 @@ def build_metadata(item: LearningEntity) -> LearningMetadata:
     )
 
 def find_nearest_learning_item(entity: LearningEntity) -> list[NearestLearningItem]:
-    results = learningCollection.query(
+    results = get_learning_collection().query(
         query_texts=[entity.text],
         n_results=5,
         include=["documents", "metadatas", "distances"]
@@ -44,7 +44,7 @@ def save_in_db(entity: LearningEntity):
         entity = upsert_learning_entity(entity)
         # Insert in ChromaDB
         metadata = build_metadata(entity).model_dump(exclude_none=True)
-        learningCollection.add(
+        get_learning_collection().add(
             ids=str(entity.id),
             documents=entity.text,
             metadatas=metadata,

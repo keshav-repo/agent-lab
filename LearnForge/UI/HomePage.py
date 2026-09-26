@@ -10,6 +10,8 @@ if str(ROOT) not in sys.path:
 from EntityPage import EntityPage
 from ExcelUtility import ExcelUtility
 from JsonUtility import JsonUtility
+from WorkspaceManager import bootstrap, get_active_workspace
+from WorkspacePage import WorkspacePage
 from theme import apply_theme, toggle_label, toggle_theme
 
 class HomePage(tk.Tk):
@@ -20,9 +22,11 @@ class HomePage(tk.Tk):
         self.minsize(720, 480)
         self.geometry("780x520")
         self._set_icon()
+        bootstrap()
         self.entity_page = None
         self.excel_page = None
         self.json_page = None
+        self.workspace_page = None
         self._build_shell()
         self._build_home()
         self.show_home()
@@ -35,17 +39,27 @@ class HomePage(tk.Tk):
         self.iconphoto(True, self._icon_image)
 
     def _build_shell(self):
-        self.content = ttk.Frame(self)
-        self.content.pack(fill=tk.BOTH, expand=True)
+        self.top_bar = ttk.Frame(self, padding=(12, 8))
+        self.top_bar.pack(fill=tk.X)
+
+        self.workspace_label = ttk.Label(self.top_bar, text="", style="Muted.TLabel")
+        self.workspace_label.pack(side=tk.LEFT)
 
         self.theme_btn = ttk.Button(
-            self,
+            self.top_bar,
             text=toggle_label(),
             style="Back.TButton",
             command=self.on_toggle_theme,
         )
-        self.theme_btn.place(relx=1.0, x=-12, y=10, anchor="ne")
-        self.theme_btn.lift()
+        self.theme_btn.pack(side=tk.RIGHT)
+
+        self.content = ttk.Frame(self)
+        self.content.pack(fill=tk.BOTH, expand=True)
+        self.refresh_workspace_label()
+
+    def refresh_workspace_label(self):
+        name = get_active_workspace().get("name", "")
+        self.workspace_label.config(text=f"Workspace: {name}" if name else "")
 
     def _build_home(self):
         self.home_frame = ttk.Frame(self.content, padding=48)
@@ -82,6 +96,13 @@ class HomePage(tk.Tk):
             command=self.show_json,
         ).pack(fill=tk.X, pady=8, ipadx=48)
 
+        ttk.Button(
+            actions,
+            text="Workspace",
+            style="Secondary.TButton",
+            command=self.show_workspace,
+        ).pack(fill=tk.X, pady=8, ipadx=48)
+
     def on_toggle_theme(self):
         toggle_theme(self)
         self.theme_btn.config(text=toggle_label())
@@ -96,13 +117,14 @@ class HomePage(tk.Tk):
             self.excel_page.pack_forget()
         if self.json_page is not None:
             self.json_page.pack_forget()
+        if self.workspace_page is not None:
+            self.workspace_page.pack_forget()
 
     def show_home(self):
         self._hide_pages()
         self.geometry("780x520")
         self.title("LearnForge")
         self.home_frame.pack(fill=tk.BOTH, expand=True)
-        self.theme_btn.lift()
 
     def show_entities(self):
         self._hide_pages()
@@ -112,7 +134,6 @@ class HomePage(tk.Tk):
             self.entity_page = EntityPage(self.content, on_back=self.show_home)
         self.entity_page.pack(fill=tk.BOTH, expand=True)
         self.entity_page.refresh()
-        self.theme_btn.lift()
 
     def show_excel(self):
         self._hide_pages()
@@ -121,7 +142,6 @@ class HomePage(tk.Tk):
         if self.excel_page is None:
             self.excel_page = ExcelUtility(self.content, on_back=self.show_home)
         self.excel_page.pack(fill=tk.BOTH, expand=True)
-        self.theme_btn.lift()
 
     def show_json(self):
         self._hide_pages()
@@ -130,7 +150,19 @@ class HomePage(tk.Tk):
         if self.json_page is None:
             self.json_page = JsonUtility(self.content, on_back=self.show_home)
         self.json_page.pack(fill=tk.BOTH, expand=True)
-        self.theme_btn.lift()
+
+    def show_workspace(self):
+        self._hide_pages()
+        self.geometry("780x520")
+        self.title("Workspace")
+        if self.workspace_page is None:
+            self.workspace_page = WorkspacePage(
+                self.content,
+                on_back=self.show_home,
+                on_workspace_changed=self.refresh_workspace_label,
+            )
+        self.workspace_page.pack(fill=tk.BOTH, expand=True)
+        self.workspace_page.refresh()
 
 
 if __name__ == "__main__":
