@@ -1,3 +1,7 @@
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from agents import (
     Agent,
@@ -10,12 +14,31 @@ from models import DuplicateCheckResult, DuplicateClassification, NearestLearnin
 
 set_tracing_disabled(True)
 
-MODEL_NAME = "llama3.2"
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-client = AsyncOpenAI(
-    base_url="http://localhost:11434/v1",
-    api_key="ollama",
-)
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").strip().lower()
+
+if LLM_PROVIDER == "openrouter":
+    MODEL_NAME = os.getenv("OPENROUTER_MODEL", "gpt-luna")
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "OPENROUTER_API_KEY must be set when LLM_PROVIDER=openrouter."
+        )
+    client = AsyncOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+elif LLM_PROVIDER == "ollama":
+    MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3.2")
+    client = AsyncOpenAI(
+        base_url="http://localhost:11434/v1",
+        api_key="ollama",
+    )
+else:
+    raise ValueError(
+        f"Unsupported LLM_PROVIDER '{LLM_PROVIDER}'. Use 'ollama' or 'openrouter'."
+    )
 
 INSTRUCTIONS = """
 You are a semantic deduplication agent for a technical
@@ -109,7 +132,7 @@ def check_duplicate(
     result = Runner.run_sync(dedup_agent, prompt)
     return result.final_output
 
-
+#
 # if __name__ == "__main__":
 #
 #     new_question = "Explain HashMap Internal working?"
@@ -135,3 +158,4 @@ def check_duplicate(
 #     result = check_duplicate(new_question, candidates)
 #
 #     print(result.model_dump_json(indent=2))
+#
