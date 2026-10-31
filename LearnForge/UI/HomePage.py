@@ -10,6 +10,7 @@ if str(ROOT) not in sys.path:
 from EntityPage import EntityPage
 from ExcelUtility import ExcelUtility
 from JsonUtility import JsonUtility
+from SettingPage import SettingPage
 from WorkspaceManager import bootstrap, get_active_workspace
 from WorkspacePage import WorkspacePage
 from theme import apply_theme, toggle_label, toggle_theme
@@ -27,6 +28,7 @@ class HomePage(tk.Tk):
         self.excel_page = None
         self.json_page = None
         self.workspace_page = None
+        self.setting_page = None
         self._build_shell()
         self._build_home()
         self.show_home()
@@ -67,11 +69,6 @@ class HomePage(tk.Tk):
         ttk.Label(self.home_frame, text="LearnForge", style="Title.TLabel").pack(
             pady=(40, 6)
         )
-        ttk.Label(
-            self.home_frame,
-            text="Welcome. Browse your learning knowledge base.",
-            style="Subtitle.TLabel",
-        ).pack(pady=(0, 36))
 
         actions = ttk.Frame(self.home_frame)
         actions.pack()
@@ -103,6 +100,13 @@ class HomePage(tk.Tk):
             command=self.show_workspace,
         ).pack(fill=tk.X, pady=8, ipadx=48)
 
+        ttk.Button(
+            actions,
+            text="Settings",
+            style="Secondary.TButton",
+            command=self.show_settings,
+        ).pack(fill=tk.X, pady=8, ipadx=48)
+
     def on_toggle_theme(self):
         toggle_theme(self)
         self.theme_btn.config(text=toggle_label())
@@ -119,6 +123,8 @@ class HomePage(tk.Tk):
             self.json_page.pack_forget()
         if self.workspace_page is not None:
             self.workspace_page.pack_forget()
+        if self.setting_page is not None:
+            self.setting_page.pack_forget()
 
     def show_home(self):
         self._hide_pages()
@@ -163,6 +169,14 @@ class HomePage(tk.Tk):
             )
         self.workspace_page.pack(fill=tk.BOTH, expand=True)
         self.workspace_page.refresh()
+
+    def show_settings(self):
+        self._hide_pages()
+        self.geometry("780x520")
+        self.title("Settings")
+        if self.setting_page is None:
+            self.setting_page = SettingPage(self.content, on_back=self.show_home)
+        self.setting_page.pack(fill=tk.BOTH, expand=True)
 
 
 if __name__ == "__main__":
