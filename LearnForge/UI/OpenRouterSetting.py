@@ -5,6 +5,8 @@ from tkinter import messagebox, ttk
 
 from dotenv import dotenv_values, set_key
 
+from theme import colors
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_PATH = PROJECT_ROOT / ".env"
@@ -14,12 +16,13 @@ class OpenRouterSetting(tk.Toplevel):
 		super().__init__(master)
 		self.title("OpenRouter Setting")
 		self.resizable(False, False)
+		self.configure(bg=colors()["bg"])
 		self.transient(master.winfo_toplevel())
 		self.grab_set()
 
 		env_values = dotenv_values(ENV_PATH) if ENV_PATH.exists() else {}
 
-		container = ttk.Frame(self, padding=20)
+		container = ttk.Frame(self, padding=28)
 		container.pack(fill=tk.BOTH, expand=True)
 
 		self.openrouter_frame = ttk.Frame(container)
@@ -35,27 +38,35 @@ class OpenRouterSetting(tk.Toplevel):
 			or ""
 		)
 
-		ttk.Label(self.openrouter_frame, text="OPENROUTER_MODEL").pack(anchor="w")
-		ttk.Entry(self.openrouter_frame, textvariable=self.model_var, width=36).pack(
-			fill=tk.X, pady=(4, 12)
+		ttk.Label(container, text="OpenRouter", style="Title.TLabel").pack(anchor="w", pady=(0, 20))
+
+		ttk.Label(self.openrouter_frame, text="OPENROUTER_MODEL", style="Heading.TLabel").pack(anchor="w")
+		ttk.Entry(self.openrouter_frame, textvariable=self.model_var, width=44).pack(
+			fill=tk.X, pady=(6, 18)
 		)
 		ttk.Label(
 			self.openrouter_frame,
-			text="OPENROUTER_API_KEY (leave blank to keep the saved key)",
+			text="OPENROUTER_API_KEY",
+			style="Heading.TLabel",
 		).pack(anchor="w")
 		ttk.Entry(
 			self.openrouter_frame,
 			textvariable=self.api_key_var,
 			show="•",
-			width=36,
-		).pack(fill=tk.X, pady=(4, 12))
-		self.openrouter_frame.pack(fill=tk.X, pady=(0, 8))
+			width=44,
+		).pack(fill=tk.X, pady=(6, 4))
+		ttk.Label(
+			self.openrouter_frame,
+			text="Leave blank to keep the saved key.",
+			style="Muted.TLabel",
+		).pack(anchor="w")
+		self.openrouter_frame.pack(fill=tk.X, pady=(0, 16))
 
 		ttk.Label(
 			container,
 			text="Changes apply after restarting LearnForge.",
 			style="Muted.TLabel",
-		).pack(anchor="w", pady=(0, 16))
+		).pack(anchor="w", pady=(0, 20))
 
 		buttons = ttk.Frame(container)
 		buttons.pack(fill=tk.X)

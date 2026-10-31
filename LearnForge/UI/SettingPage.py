@@ -38,34 +38,53 @@ class SettingPage(ttk.Frame):
 			provider = "ollama"
 		self.provider_var = tk.StringVar(value=provider)
 
+		ttk.Label(self, text="LLM Provider", style="Heading.TLabel").pack(anchor="w")
+		ttk.Label(
+			self,
+			text="Choose which provider LearnForge uses for duplicate detection.",
+			style="Muted.TLabel",
+		).pack(anchor="w", pady=(2, 10))
+
 		provider_row = ttk.Frame(self)
-		provider_row.pack(fill=tk.X, pady=(12, 20))
-		ttk.Label(provider_row, text="LLM_PROVIDER", style="Heading.TLabel").pack(
-			side=tk.LEFT, padx=(0, 12)
-		)
+		provider_row.pack(fill=tk.X, pady=(0, 28))
 		self.provider_box = ttk.Combobox(
 			provider_row,
 			textvariable=self.provider_var,
 			values=LLM_PROVIDERS,
 			state="readonly",
+			font=("Helvetica", 12),
 		)
-		self.provider_box.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 12))
+		self.provider_box.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 12), ipady=4)
 		ttk.Button(
 			provider_row,
 			text="Submit",
 			command=self.submit_provider,
 		).pack(side=tk.RIGHT)
 
+		ttk.Separator(self, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=(0, 24))
+
+		ttk.Label(self, text="Provider Configuration", style="Heading.TLabel").pack(anchor="w")
+		ttk.Label(
+			self,
+			text="Set the model and connection details for each provider.",
+			style="Muted.TLabel",
+		).pack(anchor="w", pady=(2, 10))
+
+		actions = ttk.Frame(self)
+		actions.pack(fill=tk.X)
+		actions.columnconfigure((0, 1), weight=1, uniform="settings")
 		ttk.Button(
-			self,
-			text="Open RouterSetting",
+			actions,
+			text="OpenRouter Setting",
+			style="Secondary.TButton",
 			command=self.open_llm_settings,
-		).pack(pady=8, ipadx=48)
-		tk.Button(
-			self,
+		).grid(row=0, column=0, sticky="ew", padx=(0, 8))
+		ttk.Button(
+			actions,
 			text="Ollama Setting",
+			style="Secondary.TButton",
 			command=self.open_ollama_settings,
-		).pack(pady=8, ipadx=48)
+		).grid(row=0, column=1, sticky="ew", padx=(8, 0))
 
 	def submit_provider(self):
 		provider = self.provider_var.get().strip().lower()

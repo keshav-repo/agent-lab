@@ -5,6 +5,8 @@ from tkinter import messagebox, ttk
 
 from dotenv import dotenv_values, set_key
 
+from theme import colors
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_PATH = PROJECT_ROOT / ".env"
@@ -15,11 +17,12 @@ class OllamaSetting(tk.Toplevel):
 		super().__init__(master)
 		self.title("Ollama Setting")
 		self.resizable(False, False)
+		self.configure(bg=colors()["bg"])
 		self.transient(master.winfo_toplevel())
 		self.grab_set()
 
 		env_values = dotenv_values(ENV_PATH) if ENV_PATH.exists() else {}
-		container = ttk.Frame(self, padding=20)
+		container = ttk.Frame(self, padding=28)
 		container.pack(fill=tk.BOTH, expand=True)
 
 		self.model_var = tk.StringVar(
@@ -33,18 +36,21 @@ class OllamaSetting(tk.Toplevel):
 			or "http://localhost:11434/v1"
 		)
 
+		ttk.Label(container, text="Ollama", style="Title.TLabel").pack(anchor="w", pady=(0, 20))
+
 		ttk.Label(container, text="OLLAMA_MODEL", style="Heading.TLabel").pack(anchor="w")
-		ttk.Entry(container, textvariable=self.model_var, width=40).pack(
-			fill=tk.X, pady=(4, 12)
+		ttk.Entry(container, textvariable=self.model_var, width=44).pack(
+			fill=tk.X, pady=(6, 18)
 		)
 		ttk.Label(container, text="OLLAMA_BASE_URL", style="Heading.TLabel").pack(anchor="w")
-		ttk.Entry(container, textvariable=self.base_url_var, width=40).pack(
-			fill=tk.X, pady=(4, 12)
+		ttk.Entry(container, textvariable=self.base_url_var, width=44).pack(
+			fill=tk.X, pady=(6, 16)
 		)
 		ttk.Label(
 			container,
 			text="Changes apply after restarting LearnForge.",
-		).pack(anchor="w", pady=(0, 16))
+			style="Muted.TLabel",
+		).pack(anchor="w", pady=(0, 20))
 
 		buttons = ttk.Frame(container)
 		buttons.pack(fill=tk.X)
