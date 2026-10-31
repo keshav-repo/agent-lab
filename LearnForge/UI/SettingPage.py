@@ -1,6 +1,7 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import ttk
 
+from LLMSetting import LLMSetting
 
 class SettingPage(ttk.Frame):
 	def __init__(self, master, on_back=None):
@@ -33,10 +34,10 @@ class SettingPage(ttk.Frame):
 			command=self.open_llm_settings,
 		).pack(pady=8, ipadx=48)
 
-	@staticmethod
-	def open_llm_settings():
-		messagebox.showinfo(
-			"LLM Setting",
-			"LLM settings are not configured yet.",
-		)
+	def open_llm_settings(self):
+		if hasattr(self, "llm_settings_window") and self.llm_settings_window.winfo_exists():
+			self.llm_settings_window.lift()
+			self.llm_settings_window.focus_force()
+			return
+		self.llm_settings_window = LLMSetting(self)
 
