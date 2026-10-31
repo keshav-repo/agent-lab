@@ -3,6 +3,8 @@ import json
 import os
 import shutil
 import subprocess
+import urllib.request
+from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -125,6 +127,70 @@ def copy_to_clipboard(text: str) -> bool:
     return False
 
 
+@lru_cache(maxsize=1)
+def _openrouter_model_pricing() -> tuple[float, float] | None:
+    """Return OpenRouter's per-token input/output prices for the configured model."""
+    try:
+        request = urllib.request.Request(
+            "https://openrouter.ai/api/v1/models",
+            headers={"User-Agent": "LearnForge"},
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            models = json.load(response).get("data", [])
+        model = next((item for item in models if item.get("id") == MODEL_NAME), None)
+        if model is None:
+            L.warning("OpenRouter pricing not found for model %s", MODEL_NAME)
+            return None
+        pricing = model.get("pricing", {})
+        return float(pricing["prompt"]), float(pricing["completion"])
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        L.warning("Could not retrieve OpenRouter pricing for %s: %s", MODEL_NAME, e)
+        return None
+
+
+def _estimate_usage_cost(input_tokens: int, output_tokens: int) -> float | None:
+    """Estimate USD cost; optional overrides are expressed per million tokens."""
+    pricing = _openrouter_model_pricing()
+    input_rate, output_rate = pricing if pricing is not None else (None, None)
+    for env_name, current, is_input in (
+        ("OPENROUTER_INPUT_PRICE_PER_MILLION", input_rate, True),
+        ("OPENROUTER_OUTPUT_PRICE_PER_MILLION", output_rate, False),
+    ):
+        value = os.getenv(env_name)
+        if value:
+            try:
+                rate = float(value) / 1_000_000
+            except ValueError:
+                L.warning("Ignoring invalid %s value: %s", env_name, value)
+                continue
+            if is_input:
+                input_rate = rate
+            else:
+                output_rate = rate
+    if input_rate is None or output_rate is None:
+        return None
+    return input_tokens * input_rate + output_tokens * output_rate
+
+
+def _log_usage(result) -> None:
+    usage = result.context_wrapper.usage
+    input_tokens = usage.input_tokens
+    output_tokens = usage.output_tokens
+    cost = _estimate_usage_cost(input_tokens, output_tokens)
+    if cost is None:
+        L.info(
+            "BrowserAssistant usage | model=%s | input_tokens=%s | output_tokens=%s "
+            "| cost_estimate=unavailable (set OpenRouter price overrides if needed)",
+            MODEL_NAME, input_tokens, output_tokens,
+        )
+        return
+    L.info(
+        "BrowserAssistant usage | model=%s | input_tokens=%s | output_tokens=%s "
+        "| estimated_cost=$%.8f (%.6f cents)",
+        MODEL_NAME, input_tokens, output_tokens, cost, cost * 100,
+    )
+
+
 async def chat() -> None:
     node_bin = _node_bin_dir()
     env = dict(os.environ)
@@ -208,6 +274,7 @@ async def chat() -> None:
                 continue
             history = result.to_input_list()
             last_output = str(result.final_output)
+            _log_usage(result)
             print(f"\n{last_output}")
 
 
