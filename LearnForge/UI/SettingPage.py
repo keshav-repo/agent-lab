@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from LLMSetting import LLMSetting
+from OpenRouterSetting import OpenRouterSetting
 
 class SettingPage(ttk.Frame):
 	def __init__(self, master, on_back=None):
@@ -30,7 +30,7 @@ class SettingPage(ttk.Frame):
 
 		ttk.Button(
 			self,
-			text="LLM Setting",
+			text="Open RouterSetting",
 			command=self.open_llm_settings,
 		).pack(pady=8, ipadx=48)
 
@@ -39,5 +39,5 @@ class SettingPage(ttk.Frame):
 			self.llm_settings_window.lift()
 			self.llm_settings_window.focus_force()
 			return
-		self.llm_settings_window = LLMSetting(self)
+		self.llm_settings_window = OpenRouterSetting(self)
 
