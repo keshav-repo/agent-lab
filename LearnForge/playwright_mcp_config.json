@@ -1,0 +1,17 @@
+{
+  "browser": {
+    "browserName": "chromium",
+    "userDataDir": "/Users/keshavkumar/learn26/agent-lab/LearnForge/.chrome_automation_profile",
+    "launchOptions": {
+      "channel": "chrome",
+      "headless": false,
+      "args": [
+        "--profile-directory=Default"
+      ],
+      "ignoreDefaultArgs": [
+        "--use-mock-keychain",
+        "--password-store=basic"
+      ]
+    }
+  }
+}

@@ -15,3 +15,5 @@ temp_pages
 workspace
 .env
 .env.example
+.chrome_automation_profile
+.playwright-mcp
