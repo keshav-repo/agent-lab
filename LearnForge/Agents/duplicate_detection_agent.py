@@ -10,6 +10,7 @@ from agents import (
     set_tracing_disabled,
 )
 
+from logger import L
 from models import DuplicateCheckResult, DuplicateClassification, NearestLearningItem
 
 set_tracing_disabled(True)
@@ -42,35 +43,25 @@ else:
     )
 
 INSTRUCTIONS = """
-You are a semantic deduplication agent for a technical
-learning-question database.
+You are a semantic deduplication agent for a technical learning-question
+database. Compare a NEW question against EXISTING questions retrieved from
+ChromaDB and classify it as one of:
 
-Your job is to compare a NEW question against a list of
-EXISTING questions retrieved from ChromaDB.
-
-Classify the new question as one of:
-
-DUPLICATE:
-An existing question asks essentially the same thing,
-even if the wording is different.
-
-NEW:
-No existing question asks the same thing.
-Related or similar topics still count as NEW.
+DUPLICATE: an existing question asks essentially the same thing, even if
+worded differently.
+NEW: no existing question asks the same thing. Related or similar topics
+are still NEW.
 
 Rules:
-1. Compare the actual meaning and learning intent.
-2. Do not rely solely on ChromaDB distance.
-3. Do not classify questions as duplicates simply
-   because they contain similar keywords.
-4. Prefer DUPLICATE only when two questions would
-   require essentially the same answer.
-5. Related topics that ask a different question must
-   be classified as NEW, never DUPLICATE.
-6. Select the best matching candidate ID when the
-   classification is DUPLICATE.
-7. Never invent a candidate ID.
-8. Return ONLY a valid JSON object, without markdown.
+1. Compare meaning and learning intent, not keywords or ChromaDB distance
+   alone.
+2. Choose DUPLICATE only if both questions would need essentially the same
+   answer. Related topics that ask something different are NEW.
+3. For DUPLICATE, set matched_id to the best matching candidate ID (never
+   invent one) and canonical_question to that existing question's text.
+4. For NEW, set matched_id to null and canonical_question to the new question.
+5. Keep reason to one short sentence.
+6. Return ONLY a valid JSON object, without markdown.
 
 Required JSON format:
 {
@@ -79,11 +70,6 @@ Required JSON format:
     "canonical_question": "How does HashMap work internally in Java?",
     "reason": "Both questions ask about the same concept."
 }
-
-For NEW questions, matched_id must be null.
-For DUPLICATE questions, matched_id must identify
-the matching existing question, and use that
-existing question as the canonical question.
 """
 
 dedup_agent = Agent(
@@ -131,6 +117,17 @@ def check_duplicate(
     """
 
     result = Runner.run_sync(dedup_agent, prompt)
+    usage = result.context_wrapper.usage
+    L.info(
+        "LLM token usage [provider=%s, model=%s]: requests=%d, input=%d, output=%d, total=%d | question=%s",
+        LLM_PROVIDER,
+        MODEL_NAME,
+        usage.requests,
+        usage.input_tokens,
+        usage.output_tokens,
+        usage.total_tokens,
+        new_question,
+    )
     return result.final_output
 
 #
