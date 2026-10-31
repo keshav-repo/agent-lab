@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from OpenRouterSetting import OpenRouterSetting
+from OllamaSetting import OllamaSetting
 
 class SettingPage(ttk.Frame):
 	def __init__(self, master, on_back=None):
@@ -33,6 +34,11 @@ class SettingPage(ttk.Frame):
 			text="Open RouterSetting",
 			command=self.open_llm_settings,
 		).pack(pady=8, ipadx=48)
+		ttk.Button(
+			self,
+			text="Ollama Setting",
+			command=self.open_ollama_settings,
+		).pack(pady=8, ipadx=48)
 
 	def open_llm_settings(self):
 		if hasattr(self, "llm_settings_window") and self.llm_settings_window.winfo_exists():
@@ -40,4 +46,11 @@ class SettingPage(ttk.Frame):
 			self.llm_settings_window.focus_force()
 			return
 		self.llm_settings_window = OpenRouterSetting(self)
+
+	def open_ollama_settings(self):
+		if hasattr(self, "ollama_settings_window") and self.ollama_settings_window.winfo_exists():
+			self.ollama_settings_window.lift()
+			self.ollama_settings_window.focus_force()
+			return
+		self.ollama_settings_window = OllamaSetting(self)
 

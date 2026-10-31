@@ -31,8 +31,9 @@ if LLM_PROVIDER == "openrouter":
     )
 elif LLM_PROVIDER == "ollama":
     MODEL_NAME = os.getenv("OLLAMA_MODEL", "llama3.2")
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
     client = AsyncOpenAI(
-        base_url="http://localhost:11434/v1",
+        base_url=OLLAMA_BASE_URL,
         api_key="ollama",
     )
 else:
