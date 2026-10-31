@@ -16,3 +16,13 @@ chmod +x StartApp.sh
 
 ./StartApp.sh 
 ```
+
+### BrowserAssistant
+/clipboard -> copy to clipboard
+/save <AbsolutePath> -> save the file to the given path
+
+```shell
+ source /Users/keshavkumar/learn26/agent-lab/LearnForge/.venv/bin/activate
+ python /Users/keshavkumar/learn26/agent-lab/LearnForge/BrowserAssistant.py 
+ 
+```

@@ -149,7 +149,8 @@ async def chat() -> None:
         last_output = ""
         print(
             "Browser assistant ready. Type a task, '/clipboard' to copy the previous "
-            "response, 'clear' to reset context, 'exit' to quit."
+            "response, '/save <file path>' to save it, 'clear' to reset context, "
+            "'exit' to quit."
         )
         while True:
             try:
@@ -172,6 +173,29 @@ async def chat() -> None:
                     print("Previous response copied to clipboard.")
                 else:
                     print("Could not access the clipboard.")
+                continue
+            if prompt.lower().startswith("/save"):
+                file_path = prompt[len("/save"):].strip().strip('"').strip("'")
+                if not file_path:
+                    print("Usage: /save <file path>")
+                    continue
+                if not last_output:
+                    print("Nothing to save yet.")
+                    continue
+                destination = Path(file_path).expanduser()
+                try:
+                    if destination.exists():
+                        confirm = (await asyncio.to_thread(
+                            input, f"{destination} exists. Overwrite? [y/N]: "
+                        )).strip().lower()
+                        if confirm not in {"y", "yes"}:
+                            print("Save cancelled.")
+                            continue
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_text(last_output, encoding="utf-8")
+                    print(f"Saved previous response to {destination.resolve()}")
+                except OSError as e:
+                    print(f"Could not save file: {e}")
                 continue
             try:
                 result = await Runner.run(
