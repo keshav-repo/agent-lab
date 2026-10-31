@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import shutil
+import subprocess
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -112,6 +113,17 @@ AGENT_INSTRUCTIONS = (
     "actions (posting, deleting, purchasing, sending messages)."
 )
 
+def copy_to_clipboard(text: str) -> bool:
+    """Copy text to the system clipboard (macOS pbcopy; falls back to xclip/clip)."""
+    for cmd in (["pbcopy"], ["xclip", "-selection", "clipboard"], ["clip"]):
+        if shutil.which(cmd[0]):
+            try:
+                subprocess.run(cmd, input=text.encode("utf-8"), check=True)
+                return True
+            except (OSError, subprocess.SubprocessError):
+                return False
+    return False
+
 
 async def chat() -> None:
     node_bin = _node_bin_dir()
@@ -134,7 +146,11 @@ async def chat() -> None:
             model=OpenAIChatCompletionsModel(model=MODEL_NAME, openai_client=client),
         )
         history: list = []
-        print("Browser assistant ready. Type a task, 'clear' to reset context, 'exit' to quit.")
+        last_output = ""
+        print(
+            "Browser assistant ready. Type a task, '/clipboard' to copy the previous "
+            "response, 'clear' to reset context, 'exit' to quit."
+        )
         while True:
             try:
                 prompt = (await asyncio.to_thread(input, "\n> ")).strip()
@@ -146,7 +162,16 @@ async def chat() -> None:
                 break
             if prompt.lower() == "clear":
                 history = []
+                last_output = ""
                 print("Context cleared.")
+                continue
+            if prompt.lower() == "/clipboard":
+                if not last_output:
+                    print("Nothing to copy yet.")
+                elif copy_to_clipboard(last_output):
+                    print("Previous response copied to clipboard.")
+                else:
+                    print("Could not access the clipboard.")
                 continue
             try:
                 result = await Runner.run(
@@ -158,7 +183,8 @@ async def chat() -> None:
                 print(f"Error: {e}")
                 continue
             history = result.to_input_list()
-            print(f"\n{result.final_output}")
+            last_output = str(result.final_output)
+            print(f"\n{last_output}")
 
 
 if __name__ == "__main__":
